@@ -251,3 +251,4 @@ if __name__ == "__main__":
 
     root_dir = os.environ.get("OMNIGLOT_DIR", "omniglot")
     Omniglot(root=root_dir, download=True)
+    Omniglot(root=root_dir, background=False, download=True)
