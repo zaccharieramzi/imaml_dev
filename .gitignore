@@ -133,3 +133,4 @@ dmypy.json
 omniglot/
 task_defs/
 5_way_1_shot_exp1/
+*.csv
