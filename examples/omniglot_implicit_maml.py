@@ -80,7 +80,7 @@ else:
         learner.inner_alg = args.inner_alg
         learner.inner_lr = args.inner_lr
         learner.outer_lr = args.outer_lr
-    
+
 init_params = meta_learner.get_params()
 device = 'cuda' if args.use_gpu is True else 'cpu'
 lam = torch.tensor(args.lam) if args.scalar_lam is True else torch.ones(init_params.shape[0])*args.lam
@@ -99,7 +99,7 @@ for outstep in tqdm(range(args.meta_steps)):
     w_k = meta_learner.get_params()
     meta_grad = 0.0
     lam_grad = 0.0
-    
+
     for idx in task_mb:
         fast_learner.set_params(w_k.clone()) # sync weights
         task = dataset.__getitem__(idx) # get task
@@ -113,21 +113,21 @@ for outstep in tqdm(range(args.meta_steps)):
         vl_after = fast_learner.get_loss(task['x_val'], task['y_val'], return_numpy=True)
         tacc = utils.measure_accuracy(task, fast_learner, train=True)
         vacc = utils.measure_accuracy(task, fast_learner, train=False)
-        
+
         valid_loss = fast_learner.get_loss(task['x_val'], task['y_val'])
         valid_grad = torch.autograd.grad(valid_loss, fast_learner.model.parameters())
         flat_grad = torch.cat([g.contiguous().view(-1) for g in valid_grad])
-        
+
         if args.cg_steps <= 1:
             task_outer_grad = flat_grad
         else:
             task_matrix_evaluator = fast_learner.matrix_evaluator(task, lam, args.cg_damping)
             task_outer_grad = utils.cg_solve(task_matrix_evaluator, flat_grad, args.cg_steps, x_init=None)
-        
+
         meta_grad += (task_outer_grad/args.task_mb_size)
         losses[outstep] += (np.array([tl[0], vl_before, tl[-1], vl_after])/args.task_mb_size)
         accuracy[outstep] += np.array([tacc, vacc]) / args.task_mb_size
-              
+
         if args.lam_lr <= 0.0:
             task_lam_grad = 0.0
         else:
@@ -139,7 +139,7 @@ for outstep in tqdm(range(args.meta_steps)):
             task_lam_grad = inner_prod / (lam**2 + 0.1)
 
         lam_grad += (task_lam_grad / args.task_mb_size)
-    
+
     meta_learner.outer_step_with_grad(meta_grad, flat_grad=True)
     lam_delta = - args.lam_lr * lam_grad
     lam = torch.clamp(lam + lam_delta, args.lam_min, 5000.0) # clips each element individually if vector
@@ -149,7 +149,7 @@ for outstep in tqdm(range(args.meta_steps)):
     logger.log_kv('test_post', losses[outstep,3])
     logger.log_kv('train_acc', accuracy[outstep, 0])
     logger.log_kv('val_acc', accuracy[outstep, 1])
-    
+
     if (outstep % 50 == 0 and outstep > 0) or outstep == args.meta_steps-1:
         smoothed_losses = utils.smooth_vector(losses[:outstep], window_size=10)
         plt.figure(figsize=(10,6))
@@ -161,7 +161,7 @@ for outstep in tqdm(range(args.meta_steps)):
         plt.savefig(args.save_dir+'/learn_curve.png', dpi=100)
         plt.clf()
         plt.close('all')
-        
+
         smoothed_acc = utils.smooth_vector(accuracy[:outstep], window_size=25)
         plt.figure(figsize=(10,6))
         plt.plot(smoothed_acc)
