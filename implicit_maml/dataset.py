@@ -242,5 +242,12 @@ class OmniglotFewShotDataset(Dataset):
 
         return task
 
-    
+
 # TODO(Aravind): Add mini-imagenet to this version of code
+if __name__ == "__main__":
+    import os
+
+    from torchvision.datasets import Omniglot
+
+    root_dir = os.env.get("OMNIGLOT_DIR", "omniglot")
+    Omniglot(root=root_dir, download=True)
