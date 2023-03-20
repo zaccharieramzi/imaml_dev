@@ -249,5 +249,5 @@ if __name__ == "__main__":
 
     from torchvision.datasets import Omniglot
 
-    root_dir = os.env.get("OMNIGLOT_DIR", "omniglot")
+    root_dir = os.environ.get("OMNIGLOT_DIR", "omniglot")
     Omniglot(root=root_dir, download=True)
