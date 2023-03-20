@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -6,6 +8,7 @@ import random
 import time as timer
 import pickle
 import argparse
+import pandas as pd
 
 from tqdm import tqdm
 from implicit_maml.dataset import OmniglotTask, OmniglotFewShotDataset
@@ -41,6 +44,7 @@ parser.add_argument('--lam', type=float, default=0.0)
 parser.add_argument('--inner_lr', type=float, default=1e-2)
 parser.add_argument('--inner_alg', type=str, default='gradient')
 parser.add_argument('--use_gpu', type=bool, default=True)
+parser.add_argument('--output_csv', type=str, default="output.csv")
 args = parser.parse_args()
 assert args.task == 'Omniglot' or args.task == 'MiniImageNet'
 print(args)
@@ -83,8 +87,16 @@ for i in tqdm(range(args.num_tasks)):
     losses[i] = np.array([tl[0], vl_before, tl[-1], vl_after])
     accuracy[i][0] = tacc; accuracy[i][1] = vacc
 
-print("Mean accuracy: on train set and val set on specified tasks (meta-train or meta-test)")  
+print("Mean accuracy: on train set and val set on specified tasks (meta-train or meta-test)")
 print(np.mean(accuracy, axis=0))
 print("95% confidence intervals for the mean")
 print(1.96*np.std(accuracy, axis=0)/np.sqrt(args.num_tasks))  # note that accuracy is already in percentage
 
+
+df_results = pd.DataFrame(columns=['n_iter', 'perf'])
+df_results.append({'n_iter': args.n_steps, 'perf': np.mean(accuracy, axis=0)})
+output_path = Path(args.output_csv)
+if output_path.exists():
+    df_results.to_csv(output_path, mode="a", index=False, header=False)
+else:
+    df_results.to_csv(output_path, mode="w", index=False)
