@@ -88,13 +88,14 @@ for i in tqdm(range(args.num_tasks)):
     accuracy[i][0] = tacc; accuracy[i][1] = vacc
 
 print("Mean accuracy: on train set and val set on specified tasks (meta-train or meta-test)")
-print(np.mean(accuracy, axis=0))
+mean_acc = np.mean(accuracy, axis=0)
+print(mean_acc)
 print("95% confidence intervals for the mean")
 print(1.96*np.std(accuracy, axis=0)/np.sqrt(args.num_tasks))  # note that accuracy is already in percentage
 
 
-df_results = pd.DataFrame(columns=['n_iter', 'perf'])
-df_results.append({'n_iter': args.n_steps, 'perf': np.mean(accuracy, axis=0)})
+df_results = pd.DataFrame(columns=['n_iter', 'perf-train', 'perf-val'])
+df_results = df_results.append({'n_iter': args.n_steps, 'perf-train': mean_acc[0], 'perf-val': mean_acc[1]}, ignore_index=True)
 output_path = Path(args.output_csv)
 if output_path.exists():
     df_results.to_csv(output_path, mode="a", index=False, header=False)
