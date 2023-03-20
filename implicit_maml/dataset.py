@@ -141,7 +141,7 @@ class OmniglotTask(object):
         self.val_ids = []
         for c in classes:
             # First get all isntances of that class
-            temp = [os.path.join(c, x) for x in os.listdir(c)]
+            temp = [os.path.join(str(c), x.decode()) for x in os.listdir(c)]
             instances[c] = random.sample(temp, len(temp))
             # Sample num_inst instances randomly each for train and val
             self.train_ids += instances[c][:num_inst]
